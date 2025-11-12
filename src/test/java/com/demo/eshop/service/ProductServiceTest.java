@@ -35,7 +35,10 @@ public class ProductServiceTest {
         requestDto.setPrice(1500);
         requestDto.setStockQuantity(100);
         //save는 어차피 return값 없음으로, '가짜 행동' 정의(when)이 없어도 됨
-
+        //수정 추가
+        Product fakeSavedProduct = new Product(requestDto.getName(), requestDto.getPrice(), requestDto.getStockQuantity());
+        when(productRepository.save(any(Product.class)))
+                .thenReturn(fakeSavedProduct);
         // When
         productService.registerProduct(requestDto);
 
