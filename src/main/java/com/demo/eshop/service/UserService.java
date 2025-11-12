@@ -1,7 +1,9 @@
 package com.demo.eshop.service;
 
+import com.demo.eshop.config.JwtUtil;
 import com.demo.eshop.domain.User;
 import com.demo.eshop.domain.UserRoleEnum;
+import com.demo.eshop.dto.UserLoginRequestDto;
 import com.demo.eshop.dto.UserSignupRequestDto;
 import com.demo.eshop.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +18,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder; // Config에서 @Bean으로 등록한 녀석을 주입받음
+    private final JwtUtil jwtUtil;
 
     /* 회원 가입 */
     public void signup(UserSignupRequestDto requestDto){
@@ -36,5 +39,20 @@ public class UserService {
 
         /* DB에 저장 */
         userRepository.save(user);
+    }
+
+    public String login(UserLoginRequestDto requestDto){
+        /* 사용자 확인 (이메일)*/
+        User user = userRepository.findByEmail(requestDto.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("가입되지 않은 이메일입니다."));
+
+        /* 비밀번호 확인 */
+        //원본 비번과 DB에 저장된 암호화된 비번 비교
+        if(!passwordEncoder.matches(requestDto.getPassword(), user.getPassword())){
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다");
+        }
+
+        /* 비밀번호 일치시 Jwt 발권 */
+        return jwtUtil.createToken(user.getEmail(), user.getRole()); // 권한 포함 발급.
     }
 }
