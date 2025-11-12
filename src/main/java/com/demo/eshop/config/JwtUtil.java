@@ -1,5 +1,7 @@
 package com.demo.eshop.config;
 
+import com.demo.eshop.domain.UserRoleEnum;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
@@ -35,12 +37,15 @@ public class JwtUtil {
     }
 
     // 8. 토큰 생성 (매표소 직원이 호출)
-    public String createToken(String username) {
+    public String createToken(String username, UserRoleEnum role) {
+        Claims claims = Jwts.claims().setSubject(username); // 'sub' 클레임
+        claims.put("auth", role.name()); // "auth"라는 이름으로 ADMIN or USER 문자열을 저장
+
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expirationTime);
 
         return Jwts.builder()
-                .setSubject(username) // ⭐️ 'Payload' 부분: 토큰의 '주인' (여기선 이메일)
+                .setClaims(claims) // ⭐️ Subject 대신 CLaims 객체 통째로 넣기
                 .setIssuedAt(now)     // 'Payload': 토큰 발급 시간
                 .setExpiration(expiryDate) // 'Payload': 토큰 만료 시간
                 .signWith(key)        // ⭐️ 'Signature' 부분: 위조 방지 '서명' (우리의 '비밀 키' 사용)
