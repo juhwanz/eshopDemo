@@ -33,6 +33,10 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
+	//Jwt
+	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'   // 1. JWT 인터페이스 (API)
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'    // 2. JWT 구현체 (실제 동작 코드)
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5' // 3. JSON <-> 객체 변환용
 }
 
 tasks.named('test') {

@@ -1,3 +1,9 @@
 spring:
   application:
     name: eshop
+
+#jwt설정
+
+jwt:
+  secret: V293LFRoaXMtaXMtYS1yZWFsbHktbG9uZy1zZWNyZXQta2V5LWZvci1qd3Qtc2VjdXJpdHkhISEK
+  expiration-time: 86400000 #24시간 (밀리초)
