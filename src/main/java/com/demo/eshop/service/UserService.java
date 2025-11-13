@@ -5,6 +5,8 @@ import com.demo.eshop.domain.User;
 import com.demo.eshop.domain.UserRoleEnum;
 import com.demo.eshop.dto.UserLoginRequestDto;
 import com.demo.eshop.dto.UserSignupRequestDto;
+import com.demo.eshop.exception.BusinessException;
+import com.demo.eshop.exception.ErrorCode;
 import com.demo.eshop.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,7 +28,7 @@ public class UserService {
         /* 이메일 중복 확인 */
         String email = requestDto.getEmail();
         Optional<User> checkUser = userRepository.findByEmail(email);
-        if(checkUser.isPresent()) throw new IllegalArgumentException("이미 가입된 이메일 입니다.");
+        if(checkUser.isPresent()) throw new BusinessException(ErrorCode.EMAIL_DUPLICATION); // 정의된 예외로 교체
 
         /* 비밀번호 암호화*/
         String password = passwordEncoder.encode(requestDto.getPassword());
@@ -44,12 +46,12 @@ public class UserService {
     public String login(UserLoginRequestDto requestDto){
         /* 사용자 확인 (이메일)*/
         User user = userRepository.findByEmail(requestDto.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("가입되지 않은 이메일입니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND)); // 정의된 규칙으로 교체
 
         /* 비밀번호 확인 */
         //원본 비번과 DB에 저장된 암호화된 비번 비교
         if(!passwordEncoder.matches(requestDto.getPassword(), user.getPassword())){
-            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다");
+            throw new BusinessException(ErrorCode.PASSWORD_NOT_MATCH); // 정의된 규칙으로 교체
         }
 
         /* 비밀번호 일치시 Jwt 발권 */

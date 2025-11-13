@@ -2,6 +2,8 @@ package com.demo.eshop.service;
 
 import com.demo.eshop.domain.Product;
 import com.demo.eshop.dto.ProductRequestDto;
+import com.demo.eshop.exception.BusinessException;
+import com.demo.eshop.exception.ErrorCode;
 import com.demo.eshop.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -42,7 +44,7 @@ public class ProductService {
         // '창고'에서 ID로 상품을 찾습니다.
         // 만약 없으면(Optional), "상품이 없다"고 에러를 발생시킵니다.
         return productRepository.findById(productId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 상품이 없습니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND)); // 정의된 규칙으로 교체
     }
 
 }
