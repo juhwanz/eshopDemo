@@ -52,5 +52,29 @@ public class JwtUtil {
                 .compact();
     }
 
+    /* 토큰에서 사용자 이름 추출 */
+    public String getUsernameFromToken(String token){
+        return Jwts.parserBuilder()
+                .setSigningKey(key) // 비밀 키로 서명 검증 준비
+                .build()
+                .parseClaimsJws(token) // 토큰 해독 (parse)
+                .getBody()// Payload 부분 가져옴
+                .getSubject(); // Subject(email)반환.
+    }
+
+    /* 토큰 유효성 검증*/
+    public boolean validateToken(String token){
+        try{
+            Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token);
+            return true;
+        }catch (Exception e){
+            log.error("유효하지 않은 토큰입니다. {}", e.getMessage());
+            return false;
+        }
+    }
+
 
 }
