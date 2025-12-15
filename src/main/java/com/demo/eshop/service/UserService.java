@@ -34,7 +34,8 @@ public class UserService {
         String password = passwordEncoder.encode(requestDto.getPassword());
 
         /* 사용자 권한 설저 (기본값 : USER) */
-        UserRoleEnum role = UserRoleEnum.USER;
+        //UserRoleEnum role = UserRoleEnum.USER; // 임시로 테스트 주석
+        UserRoleEnum role = UserRoleEnum.ADMIN; // 테스트 코드
 
         /* DTO -> Domain객체로 변환 */
         User user = new User(requestDto.getEmail(), password, requestDto.getUsername(), role);

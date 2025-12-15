@@ -2,14 +2,14 @@ package com.demo.eshop.controller;
 
 import com.demo.eshop.config.UserDetailsImpl;
 import com.demo.eshop.dto.OrderRequestDto;
+import com.demo.eshop.dto.OrderResponseDto;
 import com.demo.eshop.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -32,5 +32,15 @@ public class OrderController {
         Long orderId = orderService.order(userId, requestDto.getProductId(), requestDto.getCount());
 
         return ResponseEntity.ok(orderId);
+    }
+
+    // 내 주문 내역 조회 API
+    @GetMapping
+    public ResponseEntity<List<OrderResponseDto>> getOrders(
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+    ){
+        Long userId = userDetails.getUser().getId();
+        List<OrderResponseDto> orders = orderService.getOrders(userId);
+        return ResponseEntity.ok(orders);
     }
 }

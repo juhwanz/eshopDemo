@@ -4,6 +4,7 @@ import com.demo.eshop.domain.Order;
 import com.demo.eshop.domain.OrderItem;
 import com.demo.eshop.domain.Product;
 import com.demo.eshop.domain.User;
+import com.demo.eshop.dto.OrderResponseDto;
 import com.demo.eshop.exception.BusinessException;
 import com.demo.eshop.exception.ErrorCode;
 import com.demo.eshop.repository.OrderRepository;
@@ -47,5 +48,21 @@ public class OrderService {
 
         return order.getId();
 
+    }
+
+    // 주문 목록 조회
+    @Transactional(readOnly = true)
+    public List<OrderResponseDto> getOrders(Long userId){
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        // 1. 유저의 모든 주문 조회 ( 여기선 쿼리 1방)
+        List<Order> orders = orderRepository.findAllByUserOrderByIdDesc(user);
+
+        // 2. 주문(엔티티) -> 주문 응답(DTO)로 변환햇서 반환
+        // -> 이 과정에서 각 주문마다 상품 정보를 가져오기 ㅜ이해 쿼리 엄청 나감 (N+1)
+        return orders.stream()
+                .map(OrderResponseDto::new)
+                .toList();
     }
 }
