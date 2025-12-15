@@ -2,6 +2,7 @@ package com.demo.eshop.config;
 
 import com.demo.eshop.domain.User;
 import com.demo.eshop.domain.UserRoleEnum;
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -9,6 +10,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.Collections;
 
+@Getter // <- 이게 있어야 userDetails.getUser()를 할 수 있음.
 public class UserDetailsImpl implements UserDetails {
 
     private final User user;

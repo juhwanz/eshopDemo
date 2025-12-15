@@ -41,6 +41,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz ->authz
                         /* 이 API들은 모두 접근 허용 */
                         .requestMatchers("/api/users/signup", "/api/users/login").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
+                        //Swagger 관련 허용
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         /* 상품 조회 API 모두 접근 허용*/
                         .requestMatchers(HttpMethod.GET,"/api/products/**").permitAll()
                         /* 상품등록 API ADMIN 권한만 접근 허용*/

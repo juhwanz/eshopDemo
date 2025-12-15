@@ -1,4 +1,4 @@
-package com.demo.eshop.contoller;
+package com.demo.eshop.controller;
 
 import com.demo.eshop.dto.UserLoginRequestDto;
 import com.demo.eshop.dto.UserSignupRequestDto;
