@@ -56,8 +56,11 @@ public class OrderService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        // 1. 유저의 모든 주문 조회 ( 여기선 쿼리 1방)
-        List<Order> orders = orderRepository.findAllByUserOrderByIdDesc(user);
+        // 1. 유저의 모든 주문 조회 ( 여기선 쿼리 1방) -> 기존의 느린 방식
+        // List<Order> orders = orderRepository.findAllByUserOrderByIdDesc(user);
+
+        // 1. 변경 -> fetch join을 사용한 '한방 쿼리'방식
+        List<Order> orders = orderRepository.findAllByUserWithFetchJoin(user);
 
         // 2. 주문(엔티티) -> 주문 응답(DTO)로 변환햇서 반환
         // -> 이 과정에서 각 주문마다 상품 정보를 가져오기 ㅜ이해 쿼리 엄청 나감 (N+1)
