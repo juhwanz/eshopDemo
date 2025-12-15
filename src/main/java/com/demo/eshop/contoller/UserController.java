@@ -33,7 +33,7 @@ public class UserController {
 
         // 토큰을 body가 아닌, 'Header'에 담아주는 것이 표준
         return ResponseEntity.ok() // 200ok
-                .header("Authorization", "Baerer "+token) //Authorization: Bearer [토큰값]
+                .header("Authorization", "Bearer "+token) //Authorization: Bearer [토큰값]
                 .body("로그인 성공");
     }
 }

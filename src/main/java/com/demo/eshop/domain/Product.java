@@ -29,4 +29,19 @@ public class Product {
         this.price = price;
         this.stockQuantity = stockQuantity;
     }
+
+    // [비즈니스 로직] 재고 증가 ( 주문 취소 시)
+    public void addStock(int quantity){
+        this.stockQuantity += quantity;
+    }
+
+    // [비즈니스 로직] 재고 감소 (주문 시)
+    public void removeStock(int quantity){
+        int restStock = this.stockQuantity - quantity;
+        if(restStock<0){
+            throw new IllegalArgumentException("재고가 부족합니다");
+            // 추후 BusinessException(ErrorCode.OUT_OF_STOCK)으로 바꾸면 더 완벽.
+        }
+        this.stockQuantity = restStock;
+    }
 }
