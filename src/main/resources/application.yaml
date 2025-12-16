@@ -1,8 +1,10 @@
 spring:
+  profiles:
+    include: secret   # 👈 이 줄 추가! (secret.yml을 포함하라는 뜻)
   datasource:
     url: jdbc:mysql://localhost:3306/eshop?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
     username: root
-    password: 1234
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -22,5 +24,5 @@ spring:
 #jwt설정
 
 jwt:
-  secret: V293LFRoaXMtaXMtYS1yZWFsbHktbG9uZy1zZWNyZXQta2V5LWZvci1qd3Qtc2VjdXJpdHkhISEK
+  secret: ${JWT_SECRET_KEY}
   expiration-time: 86400000 #24시간 (밀리초)

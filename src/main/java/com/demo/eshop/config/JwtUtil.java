@@ -18,21 +18,24 @@ import java.util.Date;
 public class JwtUtil {
 
     private final long expirationTime; // 2. yml에서 주입받을 '만료 시간'
+    private final String secretKeyString; // 임시로 키 값을 담아둘 변수.
     private Key key; // 3. HMAC-SHA 알고리즘으로 암호화할 '키' 객체
 
     // 4. 생성자 주입
-    public JwtUtil(@Value("${jwt.expiration-time}") long expirationTime) {
+    // 2. 생성자 수정: expirationTime과 secret을 둘 다 받아오도록 변경
+    public JwtUtil(
+            @Value("${jwt.expiration-time}") long expirationTime,
+            @Value("${jwt.secret}") String secretKeyString // application.yml에서 읽어옴
+    ) {
         this.expirationTime = expirationTime;
+        this.secretKeyString = secretKeyString;
     }
 
     // 5. @PostConstruct: 'Bean(JwtUtil)'이 생성되고 '의존성 주입'이 완료된 직후에 실행됨
     @PostConstruct
     public void init() {
-        // 6. yml의 secret 값을 Base64로 '디코딩'해서 byte 배열로 변환
-        String cleanSecretKey = "V293LFRoaXMtaXMtYS1yZWFsbHktbG9uZy1zZWNyZXQta2V5LWZvci1qd3Qtc2VjdXJpdHkhISEK"; // (개선점: @Value("${jwt.secret}")로 읽어와야 함)
-        byte[] keyBytes = Base64.getDecoder().decode(cleanSecretKey);
-
-        // 7. 디코딩된 byte 배열을 HMAC-SHA 알고리즘에 맞는 'Key' 객체로 생성
+        // 3. 하드코딩 된 문자열 삭제! -> 주입받은 변수(secretKeyString) 사용
+        byte[] keyBytes = Base64.getDecoder().decode(secretKeyString);
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
 
