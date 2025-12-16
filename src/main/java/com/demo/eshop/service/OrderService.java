@@ -29,11 +29,16 @@ public class OrderService {
     @Transactional // 데이터를 변경 하믈 readOnly = false (디폴트)
     public Long order(Long userId, Long productId, int count){
 
-        //1. 엔티티 조회 (회원, 상품)
+        //1. 엔티티 조회 (회원, 상품) -> 동시성 문제 발생
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        Product product = productRepository.findById(productId)
+        //-> 동시성 문제 발생
+        //Product product = productRepository.findById(productId)
+                //.orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+
+        //락을 걸고 조회 (해결)
+        Product product = productRepository.findByIdWithPessimisticLock(productId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
 
         // 2. 주문 상품 생성 ( 재고가 줄어 들음)
