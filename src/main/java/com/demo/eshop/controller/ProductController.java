@@ -2,6 +2,7 @@ package com.demo.eshop.controller;
 
 import com.demo.eshop.domain.Product;
 import com.demo.eshop.dto.ProductRequestDto;
+import com.demo.eshop.dto.ProductResponseDto;
 import com.demo.eshop.dto.ProductSearchCondition;
 import com.demo.eshop.service.ProductService;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +26,8 @@ public class ProductController {
 
     @GetMapping("/{productId}")
     /*상품 단건 조회*/
-    public Product getProductById(@PathVariable Long productId){
+    public ProductResponseDto getProductById(@PathVariable Long productId) {
+        // Service가 이제 DTO를 주니까, 그대로 리턴하면 됩니다.
         return productService.getProductById(productId);
     }
 

@@ -2,6 +2,7 @@ package com.demo.eshop.service;
 
 import com.demo.eshop.domain.Product;
 import com.demo.eshop.dto.ProductRequestDto;
+import com.demo.eshop.dto.ProductResponseDto;
 import com.demo.eshop.repository.ProductRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -62,7 +63,7 @@ public class ProductServiceTest {
         when(productRepository.findById(productId)).thenReturn(Optional.of(fakeProduct));
 
         //When
-        Product foundProduct = productService.getProductById(productId);
+        ProductResponseDto foundProduct = productService.getProductById(productId);
 
         // ⭐️ Then (검증)
         // 반환된 상품(foundProduct)이 null이 아닌지,
