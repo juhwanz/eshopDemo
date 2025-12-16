@@ -32,7 +32,15 @@ public class ProductController {
     }
 
     @GetMapping("/search")
-    public List<Product> searchProducts(ProductSearchCondition condition){
-        return productService.search(condition);
+    // 1. 반환 타입을 List<Product> -> List<ProductResponseDto>로 변경
+    public List<ProductResponseDto> searchProducts(ProductSearchCondition condition){
+
+        // 2. 서비스에서 받아온 Entity 리스트
+        List<Product> products = productService.search(condition);
+
+        // 3. Entity -> DTO로 변환 (포장지로 싸기)
+        return products.stream()
+                .map(ProductResponseDto::new) // 하나씩 DTO로 변환
+                .toList();
     }
 }

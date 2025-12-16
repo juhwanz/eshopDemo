@@ -3,6 +3,7 @@ package com.demo.eshop.service;
 import com.demo.eshop.domain.Product;
 import com.demo.eshop.dto.ProductRequestDto;
 import com.demo.eshop.dto.ProductResponseDto;
+import com.demo.eshop.exception.BusinessException; // 👈 import 추가 필수!
 import com.demo.eshop.repository.ProductRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils; // 👈 ID 주입용 유틸
 
 import java.util.Optional;
 
@@ -35,61 +37,53 @@ public class ProductServiceTest {
         requestDto.setName("새우깡");
         requestDto.setPrice(1500);
         requestDto.setStockQuantity(100);
-        //save는 어차피 return값 없음으로, '가짜 행동' 정의(when)이 없어도 됨
-        //수정 추가
+
         Product fakeSavedProduct = new Product(requestDto.getName(), requestDto.getPrice(), requestDto.getStockQuantity());
+        // 💡 가짜 객체(Mock)라서 ID가 null이면 서비스 로직이 꼬일 수 있음. 강제로 ID 1L 부여.
+        ReflectionTestUtils.setField(fakeSavedProduct, "id", 1L);
+
         when(productRepository.save(any(Product.class)))
                 .thenReturn(fakeSavedProduct);
+
         // When
-        productService.registerProduct(requestDto);
+        Long savedId = productService.registerProduct(requestDto);
 
         // Then
-        //productRepository의 save가 'Product 클래스' 타입의 '아무(any)' 객체를 받아서
-        //'정확히 1번(times(1))' 호출되었는지 검증해라.
+        assertThat(savedId).isEqualTo(1L); // ID가 잘 반환되었는지 확인
         verify(productRepository, times(1)).save(any(Product.class));
     }
 
     @Test
     @DisplayName("상품 ID로 조회 성공")
     void getProductById_success(){
-        //Given
+        // Given
         Long productId = 1L;
-        // '가짜' DB에 저장되어 있을 '가짜' 상품 객체를 미리 만듦
         Product fakeProduct = new Product("새우깡", 1500, 100);
+        ReflectionTestUtils.setField(fakeProduct, "id", 1L); // ID 주입
 
-        // '가짜 행동' 정의:
-        // "만약 productRepository.findById(1L)이 호출되면,"
-        // "미리 만든 '가짜' 상품(fakeProduct)을 'Optional'로 감싸서 반환(return)해!"
         when(productRepository.findById(productId)).thenReturn(Optional.of(fakeProduct));
 
-        //When
+        // When
         ProductResponseDto foundProduct = productService.getProductById(productId);
 
-        // ⭐️ Then (검증)
-        // 반환된 상품(foundProduct)이 null이 아닌지,
-        // 그리고 이름이 우리가 '가정'한 "새우깡"이 맞는지 확인
+        // Then
         assertThat(foundProduct).isNotNull();
         assertThat(foundProduct.getName()).isEqualTo("새우깡");
+        assertThat(foundProduct.getPrice()).isEqualTo(1500);
     }
 
     @Test
     @DisplayName("상품 ID로 조회 실패 - 상품 없음")
     void getProductById_fail_notFound(){
-        //Given
-        Long productId = 999L; // 없는 ID라고 가정
+        // Given
+        Long productId = 999L;
 
-        // '가짜 행동' 정의:
-        // "만약 productRepository.findById(999L)이 호출되면,"
-        // "상품이 없다는 의미로 'Optional.empty()'를 반환해!"
         when(productRepository.findById(productId)).thenReturn(Optional.empty());
 
-        // ⭐️ When & Then (실행과 검증을 동시에)
-        // "productService.getProductById(999L)를 실행할 때,"
-        // "반드시 'IllegalArgumentException' 예외가 '발생(throw)'해야 한다!"
-        assertThrows(IllegalArgumentException.class, () -> {
+        // ⭐️ When & Then
+        // IllegalArgumentException -> BusinessException으로 변경!
+        assertThrows(BusinessException.class, () -> {
             productService.getProductById(productId);
         });
     }
-
 }
-
