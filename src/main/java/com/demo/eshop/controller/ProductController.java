@@ -2,9 +2,12 @@ package com.demo.eshop.controller;
 
 import com.demo.eshop.domain.Product;
 import com.demo.eshop.dto.ProductRequestDto;
+import com.demo.eshop.dto.ProductSearchCondition;
 import com.demo.eshop.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController // json으로 응답
 @RequiredArgsConstructor
@@ -24,5 +27,10 @@ public class ProductController {
     /*상품 단건 조회*/
     public Product getProductById(@PathVariable Long productId){
         return productService.getProductById(productId);
+    }
+
+    @GetMapping("/search")
+    public List<Product> searchProducts(ProductSearchCondition condition){
+        return productService.search(condition);
     }
 }

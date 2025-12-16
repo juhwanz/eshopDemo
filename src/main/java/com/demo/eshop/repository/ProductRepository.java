@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface ProductRepository extends JpaRepository<Product, Long> {
+public interface ProductRepository extends JpaRepository<Product, Long>, ProductRepositoryCustom {
     // 비관적 락을 적용한 조회 메서드
     // PESSImistic_WRITE : 내가 수정할꺼니까, 다른 사람은 다 막아.(강력한 락)
     @Lock(LockModeType.PESSIMISTIC_WRITE)

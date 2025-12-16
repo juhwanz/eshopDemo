@@ -2,12 +2,15 @@ package com.demo.eshop.service;
 
 import com.demo.eshop.domain.Product;
 import com.demo.eshop.dto.ProductRequestDto;
+import com.demo.eshop.dto.ProductSearchCondition;
 import com.demo.eshop.exception.BusinessException;
 import com.demo.eshop.exception.ErrorCode;
 import com.demo.eshop.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -45,6 +48,10 @@ public class ProductService {
         // 만약 없으면(Optional), "상품이 없다"고 에러를 발생시킵니다.
         return productRepository.findById(productId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND)); // 정의된 규칙으로 교체
+    }
+
+    public List<Product> search(ProductSearchCondition condition){
+        return productRepository.search(condition);
     }
 
 }
