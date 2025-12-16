@@ -1,9 +1,9 @@
 spring:
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/eshop
+    url: jdbc:mysql://localhost:3306/eshop?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
     username: root
-    password: 1590
+    password: 1234
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
@@ -12,6 +12,12 @@ spring:
       hibernate:
         show_sql: true
         format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+  # Redis 설정 유지
+  data:
+    redis:
+      host: localhost
+      port: 6379
 
 #jwt설정
 
