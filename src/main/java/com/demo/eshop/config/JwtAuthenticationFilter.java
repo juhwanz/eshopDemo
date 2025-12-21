@@ -16,7 +16,10 @@ import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
+/* 보안 핵심 로직*/
 // 매 요청 마다 1번 실행
+// 왜 이 필터를 기본 로그인 필터(UsernamePasswordAu..)보다 먼저 실행?
+// -> 스프링 시큐리티는 기본적으로 세션 기반 인증이나, 우리는 세션 안씀.기본 필터 전에 JWT 유효성 검사를 선행해서 유효하면 인증처리(SecurityContextHolder에 저장)를 미리 끝내놓기 위함.
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
@@ -44,6 +47,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String email = jwtUtil.getUsernameFromToken(token);
 
             /* 동사무소에가서 사용자 ID로 표준 신분증(UserDetails) 발급 */
+            //JWT에 정보가 다 있는데, 왜 굳이 DB에서 또 조회(loadUser..)? -> 성능 저하지만, 보안상 안전 <- 토큰 발급 이후에 사용자가 탈퇴나 권한 변경
+            // DB를 한번 더 확인하면 그런 변경 사항을 실시간 반영( Todo 성능 중시를 위해 Redis 캐싱 도입하는 방법 고려)
             UserDetails userDetails = userDetailsServiceImpl.loadUserByUsername(email);
 
             /* 인증된 사용자 입니다라는 임시 신분증 발급*/

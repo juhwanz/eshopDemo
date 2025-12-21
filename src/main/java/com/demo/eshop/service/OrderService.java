@@ -25,6 +25,12 @@ public class OrderService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
 
+    // 동시성 문제 해결 [낙관 락, Redis 분산 락, Java synchronized]방법은 많음 -> 비관적 락
+    // -> synchronized : Scale-out되면 무용지물
+    // -> 낙관적 락(@Version) : 충돌이 많이 발생하는 선착순 이벤트 -> 재시도 로직 때문에 오히려DB부하 커짐
+    // -> 비관적 락 : 충돌이 잦은 환경에서도 DB레벨에서 확실하게 줄을 세워(직렬화 효과)재고 오류 원천 차단
+    /*TOdo 단점 : DeadLock, TimeOut 가능성 -> 전체 처리량 저하 => Tx 짧게 유지하고, 필요 시 Redis를 활용한 분산락 전환.*/
+    // -> Redis ???
     // 주문 생성
     @Transactional // 데이터를 변경 하믈 readOnly = false (디폴트)
     public Long order(Long userId, Long productId, int count){

@@ -15,10 +15,10 @@ public enum ErrorCode {
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다."),
     // 404 NOT_FOUND : 리소스 찾을 수 없음
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "가입되지 않은 이메일입니다."),
-    PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 상품을 찾을 수 없습니다.");
+    PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 상품을 찾을 수 없습니다."),
 
     // etc(추가)
-
+    OUT_OF_STOCK(HttpStatus.BAD_REQUEST, "재고가 부족합니다");
     private final HttpStatus httpStatus; // 400,404 같은 HTTP 상태
     private final String message;       // 비밀번호 오류와 같은 메시지
 }

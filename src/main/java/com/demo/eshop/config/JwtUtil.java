@@ -17,9 +17,12 @@ import java.util.Date;
 @Component // 1. 1일차 개념: Spring 컨테이너에 'Bean'으로 등록
 public class JwtUtil {
 
-    private final long expirationTime; // 2. yml에서 주입받을 '만료 시간'
+    private final long expirationTime; // 2. yml에서 주입받을 '만료 시간', AccessToken 만료시간(30분)
     private final String secretKeyString; // 임시로 키 값을 담아둘 변수.
     private Key key; // 3. HMAC-SHA 알고리즘으로 암호화할 '키' 객체
+
+    // [추가] Refresh Token 만료 시간 (2주 = 14일) 하드 코딩
+    private final long REFRESH_TOKEN_TIME = 14 * 24 * 60 * 60 * 1000L;
 
     // 4. 생성자 주입
     // 2. 생성자 수정: expirationTime과 secret을 둘 다 받아오도록 변경
@@ -39,7 +42,7 @@ public class JwtUtil {
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
 
-    // 8. 토큰 생성 (매표소 직원이 호출)
+    // 8. 토큰 생성 (매표소 직원이 호출) - access 토큰 생성 뿐(유효시간 짧음, 권한 정보 포함) -> RefreshToken추가해야함
     public String createToken(String username, UserRoleEnum role) {
         Claims claims = Jwts.claims().setSubject(username); // 'sub' 클레임
         claims.put("auth", role.name()); // "auth"라는 이름으로 ADMIN or USER 문자열을 저장
@@ -52,6 +55,19 @@ public class JwtUtil {
                 .setIssuedAt(now)     // 'Payload': 토큰 발급 시간
                 .setExpiration(expiryDate) // 'Payload': 토큰 만료 시간
                 .signWith(key)        // ⭐️ 'Signature' 부분: 위조 방지 '서명' (우리의 '비밀 키' 사용)
+                .compact();
+    }
+    /* [추가] 리프레시 토큰 생성 (유효시간 김, 권한 정보 없음) -> 권한 정보 없는 이유? Access Token 재발급 용도로만 쓰기 때문에.
+     */
+    public String createRefreshToken(String username){
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + REFRESH_TOKEN_TIME);
+
+        return Jwts.builder()
+                .setSubject(username) // 누구 것인지는 알아야 함을
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .signWith(key) // 서명은 키 값으로
                 .compact();
     }
 

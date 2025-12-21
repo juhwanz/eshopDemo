@@ -34,6 +34,7 @@ public class OrderConcurrencyTest {
     @BeforeEach
     void clean() {
         // 외래키(Foreign Key) 관계 때문에 자식 데이터(주문상품, 주문)부터 지워야 함!
+        // 테스트 마다 지워주는 이유는? 보통은 Tx로 롤백, 동시성 테스트에서는 여러 스레드가 동시에 Tx를 열기에, 격리가 안됨.
         orderRepository.deleteAll();
         productRepository.deleteAll();
         userRepository.deleteAll();
