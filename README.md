@@ -1,176 +1,78 @@
-🛒 E-Shop
-High-Performance E-Commerce Backend (Spring Boot)
+# 🛍️ E-Shop : 고성능 커머스 서비스 백엔드 API
 
-Spring Boot 기반 이커머스 백엔드 API 프로젝트로,
-인증/인가, 트랜잭션, 동시성 제어, 조회 성능 문제를 실제 시나리오와 테스트를 통해 검증하며 해결했습니다.
+> **대용량 트래픽을 고려한 동시성 제어와 성능 최적화에 초점을 맞춘 이커머스 핵심 API 서버**
 
-📌 Project Overview
+---
 
-목표
-단순 CRUD 구현을 넘어서, 실무에서 자주 발생하는 정합성·성능·보안 이슈를 직접 재현하고 해결하는 것
+## 1. 🛠️ 기술 스택 (Tech Stack)
 
-핵심 포인트
+| 구분 | 기술 | 사용 목적 |
+| :--- | :--- | :--- |
+| **Language** | Java 17 | 최신 LTS 버전 활용 |
+| **Framework** | Spring Boot 3.x | 생산성 높은 REST API 서버 구축 |
+| **Database** | MySQL, Redis, H2 | 메인 DB, 캐시/세션 저장소, 테스트 DB |
+| **ORM** | JPA (Hibernate), QueryDSL | 객체 중심 데이터 설계 및 동적 쿼리 처리 |
+| **Security** | Spring Security, JWT | Stateless한 인증/인가 구현 |
+| **Test** | JUnit5, Mockito | 단위 테스트 및 동시성 통합 테스트 |
 
-JWT 기반 Stateless 인증/인가
+---
 
-재고 정합성을 보장하는 동시성 제어
+## 2. 🔥 핵심 기술적 챌린지 & 해결 (Key Points)
 
-N+1 문제 및 조회 성능 최적화
+### ① 선착순 주문 시 재고 정합성 보장 (Concurrency Control)
+* **문제 상황:** 재고가 1개 남았을 때 다수의 사용자가 동시에 주문을 요청하면, Race Condition으로 인해 재고가 마이너스가 되거나 초과 주문이 접수되는 현상 발생.
+* **해결 방법:** DB 레벨의 **`Pessimistic Lock`(비관적 락)**을 적용하여, 트랜잭션이 끝날 때까지 해당 상품의 행(Row)을 잠금 처리.
+* **결과:** `OrderConcurrencyTest`를 통해 100명의 동시 요청 시 재고가 정확히 0이 됨을 검증 완료.
 
-Redis 캐시 적용
+### ② 주문 내역 조회 성능 최적화 (N+1 Problem)
+* **문제 상황:** 사용자의 주문 목록 조회(`getOrders`) 시, 각 주문(`Order`)마다 연관된 상품(`Product`) 정보를 가져오기 위해 추가적인 SELECT 쿼리가 반복 실행되는 N+1 문제 발생.
+* **해결 방법:** JPA의 **`Fetch Join`**을 사용하여 주문, 주문상품, 상품 엔티티를 한 번의 쿼리로 즉시 로딩(Eager Loading)하도록 튜닝.
+* **결과:** 쿼리 실행 횟수를 N+1회에서 **단 1회**로 획기적으로 단축.
 
-Docker 기반 실행 및 배포 경험
+### ③ 복잡한 상품 검색 조건 처리 (Dynamic Query)
+* **문제 상황:** 상품명, 최소/최대 가격 등 다양한 검색 조건이 조합될 수 있어, 모든 경우의 수를 정적 쿼리 메서드로 만들기 불가능.
+* **해결 방법:** **`QueryDSL`**을 도입하여 자바 코드로 동적 쿼리를 작성. `BooleanExpression`을 활용해 조건이 `null`일 경우 자동으로 쿼리에서 제외되도록 유연한 검색 기능 구현.
+* **결과:** 컴파일 시점에 문법 오류를 잡을 수 있는 Type-Safe한 검색 로직 완성.
 
-🧰 Tech Stack
-Category	Technology
-Language	Java 17
-Framework	Spring Boot 3.x
-ORM	Spring Data JPA (Hibernate)
-Query	QueryDSL
-Security	Spring Security, JWT
-Database	MySQL 8.0
-Cache	Redis
-Test	JUnit5, Mockito
-DevOps	Docker, AWS EC2
-🏗 Architecture
-Controller (API)
-↓ DTO
-Service (비즈니스 로직 / 트랜잭션)
-↓
-Repository (JPA / QueryDSL)
-↓
-MySQL / Redis
+### ④ 도메인 주도 설계 (DDD) 적용
+* **설계 방식:** 비즈니스 로직(재고 감소, 가격 변경 등)을 서비스 계층이 아닌 **엔티티(`Product`) 내부**에 응집시킴.
+* **이점:** 객체 스스로 상태를 관리하게 하여 객체지향적인 설계를 유지하고, 서비스 계층의 코드를 간결하게 유지.
 
+---
 
-Entity는 외부에 직접 노출하지 않고 DTO로 API 스펙을 분리
+## 3. 📂 주요 기능 명세 (Features)
 
-비즈니스 규칙은 Service/Domain 계층에 집중
+### 👤 회원 시스템 (User)
+* **JWT 인증:** Access Token & Refresh Token 이중 토큰 발급 (Redis 연동)
+* **권한 관리:** Spring Security Filter를 통한 권한 제어 (일반 유저 / 관리자)
 
-🔐 Authentication & Authorization
+### 📦 상품 시스템 (Product)
+* **상품 등록:** 관리자(ADMIN) 권한으로 상품 등록 및 재고 관리
+* **상품 검색:** QueryDSL 기반의 다중 조건 검색 (상품명, 가격 범위)
+* **캐싱:** Redis 캐싱을 적용하여 조회 성능 개선 (Global Cache Strategy)
 
-JWT 기반 Stateless 인증 적용
+### 🧾 주문 시스템 (Order)
+* **주문 처리:** 트랜잭션 기반의 주문 생성 및 취소
+* **재고 관리:** 주문 생성 시 재고 차감 및 유효성 검증 자동화
+* **이력 조회:** 사용자별 주문 이력 조회 (Fetch Join 최적화)
 
-Spring Security Filter Chain 구성
+---
 
-JwtAuthenticationFilter에서 토큰 검증
+## 4. 🧪 테스트 전략 (Testing)
 
-UserDetailsService + Adapter 패턴으로 도메인 User 연동
+* **Unit Test:** Mockito를 활용하여 Repository, Security 의존성을 격리시킨 상태에서 Service 계층의 비즈니스 로직 단위 테스트 수행.
+* **Integration Test:** H2 데이터베이스 및 멀티 스레드(`ExecutorService`) 환경을 구축하여 실제 동시성 제어 동작 검증.
 
-선택 이유
+---
 
-Session 방식 대비 확장성과 서버 부하 측면에서 유리
+## 5. 🚀 실행 방법 (How to Run)
 
-인증 상태를 서버에 저장하지 않아 수평 확장에 적합
-
-🧩 Domain Design
-Order / OrderItem 구조
-
-Order ↔ Product 간 다대다 관계를 OrderItem으로 분리
-
-주문 시점의 가격과 수량을 OrderItem에 스냅샷으로 저장
-
-효과
-
-주문 내역 변경 방지
-
-데이터 정합성 유지
-
-실무 이커머스 구조와 유사한 모델링
-
-🚀 Performance & Stability
-1️⃣ 동시성 제어 (재고 정합성)
-
-문제
-
-동일 상품에 다수의 동시 주문 요청 시 재고 수량 불일치 발생
-
-원인
-
-동시에 같은 row를 읽고 수정하는 Race Condition
-
-해결
-
-DB Row-level Pessimistic Lock 적용
-
-Java synchronized 대신 DB 트랜잭션 기반 락 선택
-
-검증
-
-ExecutorService + CountDownLatch를 활용한
-동시성 테스트 코드(OrderConcurrencyTest) 로 재현 및 검증
-
-2️⃣ 조회 성능 개선 (N+1 문제)
-
-문제
-
-주문 및 상품 조회 시 연관 엔티티로 인해 다수의 쿼리 발생
-
-해결
-
-QueryDSL + Fetch Join 적용
-
-필요 데이터만 한 번에 조회
-
-결과
-
-불필요한 추가 쿼리 제거
-
-Hibernate SQL 로그 기준 쿼리 수 감소 확인
-
-3️⃣ Redis Cache 적용
-
-변경 빈도 대비 조회 빈도가 높은 상품 단건 조회에 Redis 캐시 적용
-
-Look-aside 패턴 사용
-
-효과
-
-반복 조회 시 DB 접근 감소
-
-응답 속도 개선
-
-🧪 Test Strategy
-
-Service 단위 테스트
-
-Mockito 기반 의존성 Mock
-
-Given–When–Then 구조
-
-테스트 작성 중 Mock 설정 누락으로 인한 NPE 발생 경험
-
-테스트를 통해 DI 및 객체 생명주기 이해 강화
-
-🚢 Deployment
-
-Docker 기반 애플리케이션 컨테이너화
-
-로컬(Mac) ↔ 운영(Linux) 환경 차이 고려
-
-AWS EC2에서 Docker 이미지 실행
-
-🔐 Configuration & Security
-
-DB 비밀번호, JWT Secret Key 등 민감 정보는 환경변수로 관리
-
-로컬 개발 시 application-secret.yml 사용 (Git 제외)
-
-🧠 What I Learned
-
-JPA 영속성 컨텍스트와 트랜잭션 동작 원리
-
-Spring Security 인증 흐름의 실제 구조
-
-동시성 문제는 코드가 아니라 시나리오와 테스트로 검증해야 함
-
-성능 이슈는 추측이 아니라 로그와 쿼리로 확인
-
-📈 Next Steps
-
-Redis 캐시 무효화 전략 고도화
-
-Kafka 기반 주문 이벤트 처리
-
-GitHub Actions CI/CD 파이프라인 구축
-
-부하 테스트 기반 성능 수치화
+1.  **사전 요구사항:** Docker (Redis), Java 17
+2.  **Redis 실행:**
+    ```bash
+    docker run -p 6379:6379 redis
+    ```
+3.  **애플리케이션 실행:**
+    ```bash
+    ./gradlew bootRun
+    ```

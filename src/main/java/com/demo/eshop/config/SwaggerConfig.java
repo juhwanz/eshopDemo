@@ -13,18 +13,16 @@ public class SwaggerConfig {
 
     @Bean
     public OpenAPI openAPI() {
-        // 1. JWT 인증 설정 (Swagger에서 자물쇠 버튼 생김)
         String jwtSchemeName = "jwtAuth";
         SecurityRequirement securityRequirement = new SecurityRequirement().addList(jwtSchemeName);
 
         Components components = new Components()
                 .addSecuritySchemes(jwtSchemeName, new SecurityScheme()
                         .name(jwtSchemeName)
-                        .type(SecurityScheme.Type.HTTP) // HTTP 방식
+                        .type(SecurityScheme.Type.HTTP)
                         .scheme("bearer")
                         .bearerFormat("JWT"));
 
-        // 2. 문서 기본 정보 설정
         return new OpenAPI()
                 .info(new Info()
                         .title("MyRealEShop API 문서")
