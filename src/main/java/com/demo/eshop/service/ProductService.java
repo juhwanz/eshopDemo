@@ -39,7 +39,11 @@ public class ProductService {
         return new ProductDto.Response(product);
     }
 
-    public List<Product> search(ProductDto.SearchCondition condition){
-        return productRepository.search(condition);
+    @Transactional(readOnly = true)
+    public List<ProductDto.Response> search(ProductDto.SearchCondition condition){
+        return productRepository.search(condition)
+                .stream()
+                .map(ProductDto.Response::new)
+                .toList();
     }
 }

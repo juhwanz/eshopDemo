@@ -19,13 +19,12 @@ public class User {
     private String email;
 
     @Column(nullable = false)
-    private String password;
+    private String password;        // 암호화된 문자열 들어가야함 -> 인코더 사용
 
     @Column(nullable = false)
     private String username;
 
     @Column(nullable = false)
-
     @Enumerated(value = EnumType.STRING) //  DB에 "USER", "ADMIN" 문자열로 저장
     private UserRoleEnum role; // 권한 필드 추가
 

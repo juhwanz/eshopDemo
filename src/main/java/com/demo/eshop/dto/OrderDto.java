@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 
 public class OrderDto {
 
-
     @Getter
     @Setter
     @NoArgsConstructor
@@ -39,7 +38,6 @@ public class OrderDto {
                     .collect(Collectors.toList());
         }
     }
-
 
     @Getter
     @NoArgsConstructor

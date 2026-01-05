@@ -5,9 +5,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-@RestControllerAdvice
+@RestControllerAdvice       // AOP 핵심, 모든 RestController의 예외를 여기서 관리.
 public class GlobalExceptionHandler {
 
+    // BusinessException 예외가 터지면, 여기서 캐치.
     @ExceptionHandler(BusinessException.class)
     protected ResponseEntity<ErrorResponse> handleBusinessException(BusinessException e){
 
@@ -18,6 +19,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, errorCode.getHttpStatus());
     }
 
+    // 나머지 모든 예외.
     @ExceptionHandler
     protected ResponseEntity<ErrorResponse> handleException(Exception e) {
         ErrorResponse response = ErrorResponse

@@ -10,6 +10,8 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 public class Product {
+    // id, name, price, stockQuantity
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -23,12 +25,14 @@ public class Product {
     @Column(nullable = false)
     private int stockQuantity;
 
+    // 상품 만들때 쓰는 생성자.
     public Product(String name, int price, int stockQuantity) {
         this.name = name;
         this.price = price;
         this.stockQuantity = stockQuantity;
     }
 
+    // Domain-Driven Design : 도메인 로직을 엔티티안에 응집
     public void addStock(int quantity) {
         this.stockQuantity += quantity;
     }

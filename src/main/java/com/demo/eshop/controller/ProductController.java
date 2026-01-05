@@ -27,11 +27,6 @@ public class ProductController {
 
     @GetMapping("/search")
     public List<ProductDto.Response> searchProducts(ProductDto.SearchCondition condition){
-
-        List<Product> products = productService.search(condition);
-
-        return products.stream()
-                .map(ProductDto.Response::new)
-                .toList();
+        return productService.search(condition);
     }
 }
