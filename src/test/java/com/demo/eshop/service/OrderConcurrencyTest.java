@@ -43,7 +43,7 @@ public class OrderConcurrencyTest {
         productRepository.save(product);
         Long productId = product.getId();
 
-        User user = new User("teste2r@test.com", "1234", "tester", UserRoleEnum.USER);
+        User user = new User("teste2@test.com", "1234", "tester", UserRoleEnum.USER);
         userRepository.save(user);
         Long userId = user.getId();
 

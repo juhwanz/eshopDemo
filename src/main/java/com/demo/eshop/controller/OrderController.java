@@ -4,6 +4,10 @@ import com.demo.eshop.config.UserDetailsImpl;
 import com.demo.eshop.dto.OrderDto;
 import com.demo.eshop.service.OrderService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -31,11 +35,12 @@ public class OrderController {
 
 
     @GetMapping
-    public ResponseEntity<List<OrderDto.Response>> getOrders(
-            @AuthenticationPrincipal UserDetailsImpl userDetails
-    ){
+    public ResponseEntity<Page<OrderDto.Response>> getOrders(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.DESC)Pageable pageable
+            ){
         Long userId = userDetails.getUser().getId();
-        List<OrderDto.Response> orders = orderService.getOrders(userId);
+        Page<OrderDto.Response> orders = orderService.getOrders(userId, pageable);
         return ResponseEntity.ok(orders);
     }
 }

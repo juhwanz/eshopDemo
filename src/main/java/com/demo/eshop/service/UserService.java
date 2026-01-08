@@ -34,7 +34,7 @@ public class UserService {
 
         String password = passwordEncoder.encode(requestDto.getPassword());
 
-        UserRoleEnum role = UserRoleEnum.ADMIN;
+        UserRoleEnum role = UserRoleEnum.USER;
 
         User user = new User(requestDto.getEmail(), password, requestDto.getUsername(), role);
 

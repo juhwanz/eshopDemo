@@ -11,6 +11,8 @@ import com.demo.eshop.repository.OrderRepository;
 import com.demo.eshop.repository.ProductRepository;
 import com.demo.eshop.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,14 +47,13 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
-    public List<OrderDto.Response> getOrders(Long userId){
+    public Page<OrderDto.Response> getOrders(Long userId, Pageable pageable){
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        List<Order> orders = orderRepository.findAllByUserWithFetchJoin(user);
+        // Fetch join 대신 Batch Size를 활용한 조회로 변경.
+        Page<Order> orderPage = orderRepository.findAllByUser(user, pageable);
 
-        return orders.stream()
-                .map(OrderDto.Response::new)
-                .toList();
+        return orderPage.map(OrderDto.Response::new);
     }
 }
