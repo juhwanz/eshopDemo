@@ -3,6 +3,7 @@ package com.demo.eshop.controller;
 import com.demo.eshop.domain.Product;
 import com.demo.eshop.dto.ProductDto;
 import com.demo.eshop.service.ProductService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,7 +20,7 @@ public class ProductController {
     private final ProductService productService;
 
     @PostMapping
-    public Long registerProduct(@RequestBody ProductDto.RegisterRequest requestDto){
+    public Long registerProduct(@RequestBody @Valid ProductDto.RegisterRequest requestDto){
         return productService.registerProduct(requestDto);
     }
 

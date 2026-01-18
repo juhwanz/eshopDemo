@@ -1,14 +1,22 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=false
+    # 1. LOCK_TIMEOUT=10000 추가 (10초 대기)
+    url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000
     driver-class-name: org.h2.Driver
     username: sa
     password:
+    hikari:
+      # 2. 커넥션 풀을 50개로 늘림 (스레드 40개가 동시에 들어와도 넉넉하게)
+      maximum-pool-size: 50
+      connection-timeout: 30000
+
   jpa:
     hibernate:
-      ddl-auto: create-drop  # [중요] 테스트 시작할 때 테이블 만들고, 끝나면 지워라!
-    properties:
-      hibernate:
-        format_sql: true     # SQL 예쁘게 출력
-        dialect: org.hibernate.dialect.H2Dialect
-    show-sql: true           # SQL 로그 출력
+      ddl-auto: create-drop
+    show-sql: false # 로그 너무 많으면 느려지니 끔
+    open-in-view: false
+
+# 3. 테스트용 가짜 시크릿 키 (Base64 호환)
+jwt:
+  secret: "r4P8xQ2s9vJ7kL5nZ3m1A0bC6dE8fG9hI0jK1lM2nO3pQ4rS5tU6vW7xY8zA9bC0dE1fG2hI3jK4lM5nO6pQ7rS8tU9vW0xY1z"
+  expiration-time: 3600000

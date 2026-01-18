@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @NoArgsConstructor
+@Table(name = "products") // SQL문법 충돌 방지.
 public class Product {
     // id, name, price, stockQuantity
 

@@ -1,6 +1,8 @@
 package com.demo.eshop.dto;
 
 import com.demo.eshop.domain.Product;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,8 +13,13 @@ public class ProductDto {
     @Setter
     public static class RegisterRequest {
 
+        @NotBlank(message = "상품명은 필수")
         private String name;
+
+        @Min(value = 100, message = "가격은 최소 100원 이상")
         private int price;
+
+        @Min(value = 0, message = "재고는 0개 이상이어야 함.")
         private int stockQuantity;
 
     }

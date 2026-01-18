@@ -25,17 +25,17 @@ public class UserService {
     private final RedisTemplate redisTemplate;
 
     public void signup(UserDto.SignupRequest requestDto){
-
+        // email, password, role, username
         String email = requestDto.getEmail();
 
         Optional<User> checkUser = userRepository.findByEmail(email);
-
         if(checkUser.isPresent()) throw new BusinessException(ErrorCode.EMAIL_DUPLICATION);
 
         String password = passwordEncoder.encode(requestDto.getPassword());
 
         UserRoleEnum role = UserRoleEnum.USER;
 
+        // email, pwd, username, role
         User user = new User(requestDto.getEmail(), password, requestDto.getUsername(), role);
 
         userRepository.save(user);

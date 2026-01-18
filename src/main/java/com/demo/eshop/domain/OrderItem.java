@@ -1,14 +1,13 @@
 package com.demo.eshop.domain;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import org.springframework.stereotype.Service;
 
 @Entity
-@Getter @Setter
-@NoArgsConstructor
+@Getter // @Setter 어디서든 값 바꿀수 있었으나, 생성할 때 한번 생성으로 교체.
+@NoArgsConstructor(access = AccessLevel.PROTECTED) // 기본생성자 JPA 스펙상 필요, 외부에서 못 쓰게 protected로 방어.
 public class OrderItem {
 
     @Id
@@ -28,16 +27,21 @@ public class OrderItem {
     private int orderPrice;
     private int count;
 
-    //TODO 이해 안됨.
-    public static OrderItem createOrderItem(Product product, int count) {
+    public static OrderItem createOrderItem(Product product, int count){
         OrderItem orderItem = new OrderItem();
-        orderItem.setProduct(product);
-        orderItem.setCount(count);
-        orderItem.setOrderPrice(product.getPrice());
+        // Setter 대신 내부 필드에 직접 할당
+        orderItem.product = product;
+        orderItem.count = count;
+        orderItem.orderPrice = product.getPrice();
+
         product.removeStock(count);
 
         return orderItem;
     }
 
+    // 연관관계 메서드 : Order엔티티에서만 호출할 수 있게 protected로
+    protected void setOrder(Order order) {
+        this.order = order;
+    }
 
 }

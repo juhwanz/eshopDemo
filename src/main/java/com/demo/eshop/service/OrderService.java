@@ -25,7 +25,7 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
-    private final ProductRepository productRepository;
+    private final ProductService productService;
 
     @Transactional
     public Long order(Long userId, Long productId, int count){
@@ -33,8 +33,7 @@ public class OrderService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        Product product = productRepository.findByIdWithPessimisticLock(productId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+        Product product = productService.decreaseStock(productId, count);
 
         OrderItem orderItem = OrderItem.createOrderItem(product, count);
 

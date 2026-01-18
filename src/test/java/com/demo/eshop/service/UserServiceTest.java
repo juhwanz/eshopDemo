@@ -2,7 +2,6 @@ package com.demo.eshop.service;
 
 import com.demo.eshop.config.JwtUtil;
 import com.demo.eshop.domain.User;
-import com.demo.eshop.domain.UserRoleEnum;
 import com.demo.eshop.dto.UserDto;
 import com.demo.eshop.exception.BusinessException; // 👈 import 추가 필수!
 import com.demo.eshop.repository.UserRepository;

@@ -1,7 +1,9 @@
 package com.demo.eshop.exception;
 
 import com.demo.eshop.dto.ErrorResponse;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -18,7 +20,18 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(response, errorCode.getHttpStatus());
     }
+    // Validation 검사 실패 시.
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    protected ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException e){
+        String message = e.getBindingResult().getFieldError().getDefaultMessage();
 
+        ErrorResponse response = ErrorResponse.builder()
+                .code("INVALID_INPUT")
+                .message(message)
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
     // 나머지 모든 예외.
     @ExceptionHandler
     protected ResponseEntity<ErrorResponse> handleException(Exception e) {
