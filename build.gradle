@@ -25,55 +25,46 @@ repositories {
 }
 
 dependencies {
+	// 1. Spring Boot Default
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
-	compileOnly 'org.projectlombok:lombok'
-	//db(mysql)
-	runtimeOnly 'com.mysql:mysql-connector-j'
-	// 테스트용 인메모리 DB (H2)
-	testRuntimeOnly 'com.h2database:h2'
-
-	annotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
-	//Jwt
-	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'   // 1. JWT 인터페이스 (API)
-	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'    // 2. JWT 구현체 (실제 동작 코드)
-	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5' // 3. JSON <-> 객체 변환용
 
-	// swagger 추가
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
+	// 2. Lombok
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
 
-	// QueryDSL 추가
-	implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
-	annotationProcessor "com.querydsl:querydsl-apt:5.0.0:jakarta"
+	// 3. Database & Redis
+	runtimeOnly 'com.mysql:mysql-connector-j'
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+	// [중요] Redisson 버전 명시 필수 (버전이 없으면 에러 발생)
+	implementation 'org.redisson:redisson-spring-boot-starter:3.31.0'
+
+	// 4. QueryDSL (SpringBoot 3.0 이상 / Gradle 8 이상 표준 설정)
+	// :jakarta 관례를 사용하여 javax -> jakarta 자동 변환 문제 해결
+	implementation 'com.querydsl:querydsl-jpa:5.1.0:jakarta'
+	annotationProcessor "com.querydsl:querydsl-apt:5.1.0:jakarta"
+	// QClass 생성 시 필요한 어노테이션 프로세서 추가
 	annotationProcessor "jakarta.annotation:jakarta.annotation-api"
 	annotationProcessor "jakarta.persistence:jakarta.persistence-api"
 
-	implementation "org.springframework.boot:spring-boot-starter-validation"
+	// 5. JWT (0.11.5 Stable)
+	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
-	// Reids 추가
-	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	// 6. Swagger (SpringDoc)
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
 
+	// 7. Test
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	testRuntimeOnly 'com.h2database:h2' // 테스트용 DB
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
-}
-
-// Q파일 생성 경로 설정
-def querydslDir = "$buildDir/generated/querydsl"
-
-sourceSets {
-	main.java.srcDirs += [ querydslDir ]
-}
-
-tasks.withType(JavaCompile) {
-	options.getGeneratedSourceOutputDirectory().set(file(querydslDir))
-}
-
-clean.doLast {
-	file(querydslDir).deleteDir()
 }

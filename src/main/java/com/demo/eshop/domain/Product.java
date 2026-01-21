@@ -45,4 +45,11 @@ public class Product {
         }
         this.stockQuantity = restStock;
     }
+
+    public void updatePrice(int newPrice){
+        if (newPrice < 0) {
+            throw new IllegalArgumentException("가격은 0원 이상이어야 합니다.");
+        }
+        this.price = newPrice;
+    }
 }

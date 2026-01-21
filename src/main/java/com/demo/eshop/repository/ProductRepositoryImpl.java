@@ -8,6 +8,8 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.support.PageableExecutionUtils;
 
 import java.util.List;
@@ -28,6 +30,8 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
                         nameContains(condition.getName()),
                         priceBetween(condition.getMinPrice(), condition.getMaxPrice())
                 )
+                // 전형적인 Offset 페이징(Limit-Offset)
+                    // 만약 만 개의 상품을 요청 -> DB는 앞의 만 개 다 읽은 다음 버리고, 10개를 가져옴. -> 성능 저하 가능성.
                 .offset(pageable.getOffset())   // 페이지 번호 (0부터 시작)
                 .limit(pageable.getPageSize())  // 페이지 사이즈 (가져올 개수)
                 .fetch();
@@ -47,20 +51,42 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
         return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);
     }
 
+    // No offSet
+    @Override
+    public Slice<Product> searchNoOffset(Long lastProductId, ProductDto.SearchCondition condition, Pageable pageable) {
+        List<Product> content = queryFactory
+                .selectFrom(product)
+                .where(
+                        ltProductId(lastProductId), // 핵심: lastProductId보다 작은 ID 조회
+                        nameContains(condition.getName()),
+                        priceBetween(condition.getMinPrice(), condition.getMaxPrice())
+                )
+                .orderBy(product.id.desc()) // 최신순 (No-Offset은 순서가 중요함)
+                .limit(pageable.getPageSize() + 1) // 다음 페이지 있는지 확인하려고 +1 조회
+                .fetch();
+
+        boolean hasNext = false;
+        if (content.size() > pageable.getPageSize()) {
+            content.remove(pageable.getPageSize()); // +1개 확인했으니 제거
+            hasNext = true;
+        }
+
+        return new SliceImpl<>(content, pageable, hasNext);
+    }
+
+    // 동적 쿼리 조건들
+    private BooleanExpression ltProductId(Long lastProductId) {
+        return lastProductId == null ? null : product.id.lt(lastProductId);
+    }
+
     private BooleanExpression nameContains(String name) {
         return name != null ? product.name.contains(name) : null;
     }
 
     private BooleanExpression priceBetween(Integer minPrice, Integer maxPrice) {
-        if (minPrice == null && maxPrice == null) {
-            return null;
-        }
-        if (minPrice != null && maxPrice != null) {
-            return product.price.between(minPrice, maxPrice);
-        }
-        if (minPrice != null) {
-            return product.price.goe(minPrice);
-        }
+        if (minPrice == null && maxPrice == null) return null;
+        if (minPrice != null && maxPrice != null) return product.price.between(minPrice, maxPrice);
+        if (minPrice != null) return product.price.goe(minPrice);
         return product.price.loe(maxPrice);
     }
 }

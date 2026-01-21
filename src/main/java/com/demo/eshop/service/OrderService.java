@@ -51,8 +51,10 @@ public class OrderService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         // Fetch join 대신 Batch Size를 활용한 조회로 변경.
+        // 1. 주문 목록 조회 (쿼리 1번) -> Order 엔티티 10개 조회 = 10 + 1 = 11
         Page<Order> orderPage = orderRepository.findAllByUser(user, pageable);
 
+        // 2. DTO 변환 과정에서 각 Order마다 gerOrderItems() 호출 ( 지연 로딩 발생)
         return orderPage.map(OrderDto.Response::new);
     }
 }

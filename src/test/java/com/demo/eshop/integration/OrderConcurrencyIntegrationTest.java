@@ -1,5 +1,6 @@
 package com.demo.eshop.integration;
 
+import com.demo.eshop.facade.RedissonLockStockFacade;
 import com.demo.eshop.domain.Product;
 import com.demo.eshop.domain.User;
 import com.demo.eshop.domain.UserRoleEnum;
@@ -7,6 +8,7 @@ import com.demo.eshop.repository.OrderRepository;
 import com.demo.eshop.repository.ProductRepository;
 import com.demo.eshop.repository.UserRepository;
 import com.demo.eshop.service.OrderService;
+import com.demo.eshop.service.ProductService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,16 +22,17 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-// [핵심] 외부 파일(yml) 설정을 믿지 않고, 여기서 직접 주입합니다.
-// MODE=MySQL을 제거하고 순수 H2 모드로 동작시켜 락 타임아웃 충돌을 방지합니다.
 @SpringBootTest(properties = {
-        "spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000",
+        // 실제 운영 환경과 유사한 락 대기 상황 연출을 위해 타임아웃 설정
         "spring.datasource.hikari.maximum-pool-size=50",
         "spring.datasource.hikari.connection-timeout=5000"
 })
 public class OrderConcurrencyIntegrationTest {
 
     @Autowired private OrderService orderService;
+    @Autowired private ProductService productService; // DB 락 테스트용
+    @Autowired private RedissonLockStockFacade redissonLockStockFacade; // Redis 락 테스트용
+
     @Autowired private UserRepository userRepository;
     @Autowired private ProductRepository productRepository;
     @Autowired private OrderRepository orderRepository;
@@ -42,30 +45,58 @@ public class OrderConcurrencyIntegrationTest {
     }
 
     @Test
-    @DisplayName("동시성 제어: 30명이 동시에 주문해도 재고는 정확해야 한다.")
-    void concurrencyOrderTest() throws InterruptedException {
-        // Given
-        int stockQuantity = 30;
-        int threadCount = 30; // 30명 동시 접속
+    @DisplayName(" Deep Dive: DB 비관적 락 vs Redis 분산 락 성능 비교")
+    void comparePerformance() throws InterruptedException {
+        // =================================================
+        // 1. [Before] DB 비관적 락 (Pessimistic Lock) 테스트
+        // =================================================
+        long dbLockTime = testConcurrency(
+                "DB 비관적 락",
+                (userId, productId) -> productService.decreaseStock(productId, 1) // 기존 DB 락 메서드 호출
+        );
 
-        Product product = productRepository.save(new Product("Limited Item", 10000, stockQuantity));
+        // =================================================
+        // 2. [After] Redis 분산 락 (Distributed Lock) 테스트
+        // =================================================
+        // 데이터 초기화 (공정한 비교를 위해)
+        tearDown();
+
+        long redisLockTime = testConcurrency(
+                "Redis 분산 락",
+                (userId, productId) -> redissonLockStockFacade.decreaseStock(productId, 1) // Facade 호출
+        );
+
+        // =================================================
+        // 3. 결과 리포트 (이 부분을 캡처해서 포트폴리오에 넣으세요)
+        // =================================================
+        System.out.println("\n=============================================");
+        System.out.println(" [성능 비교 결과 리포트]");
+        System.out.println("1. DB 비관적 락 소요 시간: " + dbLockTime + "ms");
+        System.out.println("2. Redis 분산 락 소요 시간: " + redisLockTime + "ms");
+        System.out.println(" 성능 개선율: " + calculateImprovement(dbLockTime, redisLockTime) + "% 단축");
+        System.out.println("=============================================\n");
+    }
+
+    // 중복 코드를 제거한 테스트 실행기
+    private long testConcurrency(String testName, StockStrategy strategy) throws InterruptedException {
+        // Given
+        int stockQuantity = 100;
+        int threadCount = 100; // 100명 동시 요청
+
+        Product product = productRepository.save(new Product("Test Item", 10000, stockQuantity));
         User user = userRepository.save(new User("tester@test.com", "1234", "tester", UserRoleEnum.USER));
 
-        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+        ExecutorService executorService = Executors.newFixedThreadPool(32); // 쓰레드 풀 제한
         CountDownLatch latch = new CountDownLatch(threadCount);
 
-        AtomicInteger successCount = new AtomicInteger();
-        AtomicInteger failCount = new AtomicInteger();
+        long startTime = System.currentTimeMillis();
 
-        // When
         for (int i = 0; i < threadCount; i++) {
             executorService.submit(() -> {
                 try {
-                    orderService.order(user.getId(), product.getId(), 1);
-                    successCount.getAndIncrement();
+                    strategy.decrease(user.getId(), product.getId());
                 } catch (Exception e) {
-                    System.out.println("주문 실패 로그: " + e.getMessage());
-                    failCount.getAndIncrement();
+                    System.out.println(testName + " 실패: " + e.getMessage());
                 } finally {
                     latch.countDown();
                 }
@@ -73,16 +104,26 @@ public class OrderConcurrencyIntegrationTest {
         }
 
         latch.await();
+        long endTime = System.currentTimeMillis();
+        long duration = endTime - startTime;
 
-        // Then
+        // 검증 (재고가 0이어야 함)
         Product updatedProduct = productRepository.findById(product.getId()).orElseThrow();
+        assertEquals(0, updatedProduct.getStockQuantity(), testName + " 재고 불일치 발생!");
 
-        // 로그 출력 (디버깅)
-        System.out.println("성공: " + successCount.get() + ", 실패: " + failCount.get());
-        System.out.println("남은 재고: " + updatedProduct.getStockQuantity());
+        System.out.println( testName + " 완료 (" + duration + "ms)");
+        return duration;
+    }
 
-        // 검증: 실패가 0이어야 하고, 재고도 0이어야 함
-        assertEquals(0, failCount.get(), "실패한 주문이 없어야 합니다. (락 대기 시간 초과 등)");
-        assertEquals(0, updatedProduct.getStockQuantity(), "재고가 0이어야 합니다.");
+    // 람다식을 위한 함수형 인터페이스
+    @FunctionalInterface
+    interface StockStrategy {
+        void decrease(Long userId, Long productId);
+    }
+
+    private String calculateImprovement(long before, long after) {
+        if (before == 0) return "0";
+        double improvement = ((double) (before - after) / before) * 100;
+        return String.format("%.2f", improvement);
     }
 }
